@@ -1,0 +1,23 @@
+!pip install ultralytics --quiet
+from ultralytics import YOLO
+from IPython.display import Image,display
+!pip install roboflow
+from roboflow import Roboflow
+rf = Roboflow(api_key="6ko36v1ceWtMUAt6yskO")
+project = rf.workspace("wdaw").project("fire-w6h8d")
+version = project.version(2)
+dataset = version.download("yolov11")
+!yolo task=detect mode=train model=yolo11n.pt data=/content/fire-2/data.yaml epochs=80 imgsz=640 plots=True
+display(Image(filename='/content/runs/detect/train/results.png', width=600))
+display(Image(filename='/content/runs/detect/train/F1_curve.png', width=600))
+display(Image(filename='/content/runs/detect/train/PR_curve.png', width=600))
+!yolo task=detect mode=val model=/content/runs/detect/train/weights/best.pt data=/content/fire-2/data.yaml
+!yolo task=detect mode=predict model=/content/runs/detect/train/weights/best.pt conf=0.25 source=/content/fire-2/test/images save=True
+import glob
+import os
+from IPython.display import Image as IPyImage, display
+
+latest_folder = max(glob.glob('/content/runs/detect/predict*/'), key=os.path.getmtime)
+for img in glob.glob(f'{latest_folder}/*.jpg')[:3]:
+    display(IPyImage(filename=img, width=600))
+    print("\n")
